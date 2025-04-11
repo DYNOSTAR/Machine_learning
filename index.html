@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forex Trading Bot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #data-container {
+            margin-top: 20px;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        .data-row {
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+        .data-row:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Forex Trading Bot Interface</h1>
+        <p>Use the form below to fetch forex data for the desired currency pair.</p>
+        <label for="api-key">API Key:</label>
+        <input type="text" id="api-key" placeholder="Enter your Alpha Vantage API key" />
+
+        <label for="from-currency">From Currency:</label>
+        <input type="text" id="from-currency" placeholder="Enter the base currency (e.g., EUR)" value="EUR" />
+
+        <label for="to-currency">To Currency:</label>
+        <input type="text" id="to-currency" placeholder="Enter the quote currency (e.g., USD)" value="USD" />
+
+        <button onclick="fetchForexData()">Fetch Forex Data</button>
+
+        <div id="data-container">
+            <p><strong>Forex Data:</strong></p>
+            <div id="data-content">
+                <!-- Forex data will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = "http://127.0.0.1:5000"; // Replace with your Flask server address if different
+
+        // Function to fetch forex data
+        function fetchForexData() {
+            const apiKey = document.getElementById("api-key").value;
+            const fromCurrency = document.getElementById("from-currency").value;
+            const toCurrency = document.getElementById("to-currency").value;
+
+            fetch(`${API_BASE_URL}/fetch-data`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    api_key: apiKey,
+                    from_currency: fromCurrency,
+                    to_currency: toCurrency
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error("Error:", data.error);
+                    alert("Error fetching data: " + data.error);
+                } else {
+                    console.log("Forex Data:", data.data);
+                    displayForexData(data.data);
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching forex data:", error);
+                alert("Failed to fetch forex data. Check the console for details.");
+            });
+        }
+
+        // Function to display forex data
+        function displayForexData(data) {
+            const dataContainer = document.getElementById("data-content");
+            dataContainer.innerHTML = ""; // Clear previous data
+
+            if (data.length === 0) {
+                dataContainer.innerHTML = "<p>No data available for the selected pair.</p>";
+                return;
+            }
+
+            data.forEach(row => {
+                const rowElement = document.createElement("div");
+                rowElement.classList.add("data-row");
+                rowElement.textContent = `
+                    Timestamp: ${row.index},
+                    Open: ${row["1. open"]},
+                    High: ${row["2. high"]},
+                    Low: ${row["3. low"]},
+                    Close: ${row["4. close"]}`;
+                dataContainer.appendChild(rowElement);
+            });
+        }
+    </script>
+</body>
+</html>
